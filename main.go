@@ -21,6 +21,7 @@ func scan_port(hostname string, port int) scan_result {
 		result.State = "Closed or filtered"
 		return result
 	}
+
 	defer conn.Close()
 	result.State = "Open"
 	return result
@@ -46,5 +47,9 @@ func main() {
 	fmt.Printf("Enter an ip address or url to scan: ")
 	fmt.Scan(&host)
 	op := initial_scan(host)
-	fmt.Println(op)
+    for _, r := range op {
+        if (r.State == "Open") {
+            fmt.Println(r)
+        }
+    }
 }
