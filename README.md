@@ -1,5 +1,11 @@
 # Goscan
+Scans for all popular ports and shows which ports are open and their corresponding services
 
-### This program accepts an ip address or domain name as an input and scans for top 20 most used ports.
+### Usage
+By default, running `goscan` will scan for localhost. To scan other domain or IP, write:
 
-This project is under development
+`./goscan -u scanme.nmap.org`
+`./goscan -u 127.0.0.1`
+
+### TODO
+[] Implement concurrency

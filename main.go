@@ -1,55 +1,65 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"strconv"
 	"net"
+	"strconv"
 	"time"
+
+	"github.com/common-nighthawk/go-figure"
 )
 
-type scan_result struct {
-	Port int
+type Result struct {
+	Port  int
 	State string
+	Name  string
 }
 
-func scan_port(hostname string, port int) scan_result {
-	result := scan_result{Port: port}
-	address := hostname + ":" + strconv.Itoa(port)
-	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
-
+func scan_port(hostname string, port int) Result {
+	result := Result{Port: port}
+	address := net.JoinHostPort(hostname, strconv.Itoa(port))
+	conn, err := net.DialTimeout("tcp", address, 1*time.Second)
 	if err != nil {
 		result.State = "Closed or filtered"
 		return result
 	}
-
 	defer conn.Close()
+	// result.State = "Open"
 	result.State = "Open"
 	return result
 }
 
-func initial_scan(hostname string) []scan_result {
+func initial_scan(hostname string) []Result {
+	var results []Result
 
-    ports := [20]int{21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5900, 8080}
-
-
-	var results []scan_result
-
-	for _, s := range ports {
-		results = append(results, scan_port(hostname, s))
+	for k, v := range knownPorts {
+		res := scan_port(hostname, k)
+		res.Name = v
+		results = append(results, res)
 	}
 
 	return results
 }
 
+func isFlagPassed(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
+}
+
 func main() {
-	var host string
-	fmt.Println("Port Scanner by mmkamron")
-	fmt.Printf("Enter an ip address or url to scan: ")
-	fmt.Scan(&host)
-	op := initial_scan(host)
-    for _, r := range op {
-        if (r.State == "Open") {
-            fmt.Println(r)
-        }
-    }
+	addr := flag.String("u", "localhost", "IP address/Domain name")
+	flag.Parse()
+	myFigure := figure.NewFigure("Goscan", "", true)
+	myFigure.Print()
+	for _, r := range initial_scan(*addr) {
+		if r.State == "Open" {
+			fmt.Printf("Port %d is open | %s\n", r.Port, r.Name)
+		}
+	}
 }
